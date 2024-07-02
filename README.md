@@ -1,4 +1,4 @@
-# Go-Network
+# [Go-Network](https://go-network.ai/)
 ### The Go-to package for Network Analysis in Go
 
 ![](logo-small.png)
