@@ -5,6 +5,9 @@
 
 Go-Network is a Go package for the creation, manipulation, and study of the structure, dynamics, and functions of complex networks. The implemented methods cover multiple workshops, conferences (e.g,. INFOCOM, SIGCOM, KDD, TKDD, ICDE), and journals.
 
+This package is being developed as part of the [Graph-Massivizer](https://graph-massivizer.eu/) project. 
+The package is a joint effort between the [Jožef Stefan Institute](https://www.ijs.si/) and the [Vrije Universiteit Amsterdam](https://vu.nl/en).
+
 #### Supported graph generation algorithms
 - Classic algorithms
   - [Circular ladder graph]()
