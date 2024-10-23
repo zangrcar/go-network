@@ -10,6 +10,7 @@ func main() {
 	a := model.NewGraph{
 		Nodes: map[string]model.NewNode{},
 		Edges: map[int]model.NewEdge{},
+		Type:  "graph",
 	}
 	node_1 := model.NewNode{
 		ID: "node_1",
@@ -35,5 +36,5 @@ func main() {
 
 	a.AddNodeAttribute("node_1", "stacionary_vision", 15)
 
-	fmt.Println(a)
+	fmt.Println(a.ToString())
 }
