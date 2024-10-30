@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -107,6 +108,55 @@ func (g NewGraph) ToString() string {
 		str.WriteString(fmt.Sprintf("- node1_ID: %s, node2_ID: %s, attributes: %+v\n", value.First_node.ID, value.Second_node.ID, value.Attributes))
 	}
 	return str.String()
+}
+
+func (g NewGraph) NewDFS(startNode NewNode) NewGraph {
+	_, exists := g.Nodes[startNode.ID]
+	if !exists {
+		return NewGraph{}
+	}
+	visited := make(map[string]bool)
+	visitedGraph := NewGraph{
+		Nodes: make(map[string]NewNode),
+		Edges: make(map[int]NewEdge),
+	}
+	g.NewDfsUtil(startNode, visited, visitedGraph)
+	return visitedGraph
+}
+
+func (g NewGraph) NewDfsUtil(node NewNode, visited map[string]bool, visitedGraph NewGraph) {
+	visited[node.ID] = true
+	visitedGraph.AddNode(node)
+
+	for _, neighbor := range g.Neighbors(node) {
+		if !visited[neighbor.ID] {
+			e := g.GetEdgeByNodes(node, neighbor)
+			visitedGraph.AddEdge(NewEdge{First_node: node, Second_node: neighbor, Attributes: e.Attributes})
+			g.NewDfsUtil(neighbor, visited, visitedGraph)
+		}
+	}
+}
+
+func (g NewGraph) GetComponents() []NewGraph {
+	visited := make(map[string]bool)
+	for key := range g.Nodes {
+		visited[key] = false
+	}
+	components := []NewGraph{}
+	x := GetTrueString(visited)
+	for x != "" {
+		components = append(components, g.NewDFS(*g.GetNode(x)))
+	}
+	return components
+}
+
+func GetTrueString(x map[string]bool) string {
+	for key, value := range x {
+		if !value {
+			return key
+		}
+	}
+	return ""
 }
 
 func CompareNodes(n1, n2 NewNode) bool {
@@ -239,34 +289,176 @@ func (g NewGraph) ContractNewNode(n NewNode) {
 	g.RemoveNode(n)
 }
 
-func (g NewGraph) CombineNodes(n1, n2 NewNode) NewNode {
+type CombineStrategy interface {
+	CombineInt(n1, n2 interface{}) interface{}
+	CombineFloat32(n1, n2 interface{}) interface{}
+	CombineFloat64(n1, n2 interface{}) interface{}
+	CombineString(n1, n2 interface{}) interface{}
+}
+
+type StrategyAvgNum struct{}
+type StrategyArray struct{}
+type StrategyRetainMax struct{}
+type StrategyRetainMin struct{}
+
+func (s StrategyRetainMin) CombineInt(n1, n2 int) int {
+	if n1 <= n2 {
+		return n1
+	}
+	return n2
+}
+
+func (s StrategyRetainMin) CombineFloat32(n1, n2 float32) float32 {
+	if n1 <= n2 {
+		return n1
+	}
+	return n2
+}
+
+func (s StrategyRetainMin) CombineFloat64(n1, n2 float64) float64 {
+	if n1 <= n2 {
+		return n1
+	}
+	return n2
+}
+
+func (s StrategyRetainMin) CombineString(n1, n2 string) string {
+	if n1 <= n2 {
+		return n1
+	}
+	return n2
+}
+
+func (s StrategyRetainMax) CombineInt(n1, n2 int) int {
+	if n1 >= n2 {
+		return n1
+	}
+	return n2
+}
+
+func (s StrategyRetainMax) CombineFloat32(n1, n2 float32) float32 {
+	if n1 >= n2 {
+		return n1
+	}
+	return n2
+}
+
+func (s StrategyRetainMax) CombineFloat64(n1, n2 float64) float64 {
+	if n1 >= n2 {
+		return n1
+	}
+	return n2
+}
+
+func (s StrategyRetainMax) CombineString(n1, n2 string) string {
+	if n1 >= n2 {
+		return n1
+	}
+	return n2
+}
+
+func (s StrategyAvgNum) CombineInt(n1, n2 int) int {
+	return (n1 + n2) / 2
+}
+
+func (s StrategyAvgNum) CombineFloat32(n1, n2 float32) float32 {
+	return (n1 + n2) / 2
+}
+
+func (s StrategyAvgNum) CombineFloat64(n1, n2 float64) float64 {
+	return (n1 + n2) / 2
+}
+
+func (s StrategyArray) CombineInt(n1, n2 interface{}) []int {
+	if !(reflect.TypeOf(n1).Kind() == reflect.Slice) {
+		nv := n1.(int)
+		n1 = []int{nv}
+	}
+	if !(reflect.TypeOf(n2).Kind() == reflect.Slice) {
+		nv := n2.(int)
+		n2 = []int{nv}
+	}
+	return append(n1.([]int), n2.([]int)...)
+}
+
+func (s StrategyArray) CombineFloat32(n1, n2 interface{}) []float32 {
+	if !(reflect.TypeOf(n1).Kind() == reflect.Slice) {
+		nv := n1.(float32)
+		n1 = []float32{nv}
+	}
+	if !(reflect.TypeOf(n2).Kind() == reflect.Slice) {
+		nv := n2.(float32)
+		n2 = []float32{nv}
+	}
+	return append(n1.([]float32), n2.([]float32)...)
+}
+
+func (s StrategyArray) CombineFloat64(n1, n2 interface{}) []float64 {
+	if !(reflect.TypeOf(n1).Kind() == reflect.Slice) {
+		nv := n1.(float64)
+		n1 = []float64{nv}
+	}
+	if !(reflect.TypeOf(n2).Kind() == reflect.Slice) {
+		nv := n2.(float64)
+		n2 = []float64{nv}
+	}
+	return append(n1.([]float64), n2.([]float64)...)
+}
+
+func (s StrategyArray) CombineString(n1, n2 interface{}) []string {
+	if !(reflect.TypeOf(n1).Kind() == reflect.Slice) {
+		nv := n1.(string)
+		n1 = []string{nv}
+	}
+	if !(reflect.TypeOf(n2).Kind() == reflect.Slice) {
+		nv := n2.(string)
+		n2 = []string{nv}
+	}
+	return append(n1.([]string), n2.([]string)...)
+}
+
+func (g NewGraph) CombineNodes(n1, n2 NewNode, strat_num, strat_string CombineStrategy) NewNode {
 	id := ""
 	if n1.ID < n2.ID {
 		id += n1.ID + "_" + n2.ID
 	} else {
 		id += n2.ID + "_" + n1.ID
 	}
+
 	att := map[string]interface{}{}
 	for key, value := range n1.Attributes {
 		att[key] = value
 	}
-	//TODO: how to combine attributes?
-	for key, value := range n2.Attributes {
-		att[key] = value
+	for key, newValue := range n2.Attributes {
+		if existingValue, found := att[key]; found {
+			switch v := existingValue.(type) {
+			case int:
+				if nv, ok := newValue.(int); ok {
+					att[key] = strat_num.CombineInt(v, nv)
+				}
+			case float64:
+				if nv, ok := newValue.(float64); ok {
+					att[key] = strat_num.CombineFloat64(v, nv)
+				}
+			case string:
+				if nv, ok := newValue.(string); ok {
+					strat_string.CombineString(v, nv)
+				}
+			}
+		} else {
+			att[key] = newValue
+		}
 	}
-	n := NewNode{
-		ID:         id,
-		Attributes: att,
-	}
-	return n
+
+	return NewNode{ID: id, Attributes: att}
 }
 
-func (g NewGraph) ContractNewEdge(e NewEdge) {
+func (g NewGraph) ContractNewEdge(e NewEdge, strategy_num CombineStrategy, strategy_string CombineStrategy) {
 	if !g.HasEdge(e) {
 		fmt.Println("This graph does not have this edge.")
 		return
 	}
-	n := g.CombineNodes(e.First_node, e.Second_node)
+	n := g.CombineNodes(e.First_node, e.Second_node, strategy_num, strategy_string)
 	g.AddNode(n)
 
 	first := g.Neighbors(e.First_node)
@@ -376,6 +568,16 @@ func (g NewGraph) GetEdge(e NewEdge) *NewEdge {
 		}
 	}
 	return nil
+}
+
+func (g NewGraph) GetEdgeByNodes(n1, n2 NewNode) NewEdge {
+	for _, edge := range g.Edges {
+		if (CompareNodes(edge.First_node, n1) && CompareNodes(edge.Second_node, n2)) || (CompareNodes(edge.First_node, n2) && CompareNodes(edge.Second_node, n1)) {
+			return edge
+		}
+	}
+	fmt.Println("this graph does not have edge between these two nodes.")
+	return NewEdge{First_node: n1, Second_node: n2, Attributes: map[string]interface{}{}}
 }
 
 func (g NewGraph) AddEdgeAttribute(e NewEdge, att string, value interface{}) NewGraph {
