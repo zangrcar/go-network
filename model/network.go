@@ -110,6 +110,13 @@ func (g NewGraph) ToString() string {
 	return str.String()
 }
 
+func (g NewGraph) NodeToString(node NewNode) string {
+	var str strings.Builder
+	str.WriteString("Nodes:\n")
+	str.WriteString(fmt.Sprintf("- ID: %s, attributes: %+v\n", node.ID, node.Attributes))
+	return str.String()
+}
+
 func (g NewGraph) NewDFS(startNode NewNode) NewGraph {
 	_, exists := g.Nodes[startNode.ID]
 	if !exists {
