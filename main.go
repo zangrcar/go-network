@@ -7,7 +7,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/jmCodeCraft/go-network/model"
@@ -94,29 +96,35 @@ func GetKeywords(api_map map[string]interface{}) []string {
 	return words
 }
 
-func GetText(api_map map[string]interface{}) string {
+func GetText(api_map map[string]interface{}) []float64 {
 	inverted_text, ok := api_map["abstract_inverted_index"].(map[string]interface{})
 	var text string
 	if ok {
 		text = reconstructText(inverted_text)
 	}
-	return text
 
-	/*apiKey := "your-api-key-here"
-
-	client := openai.NewClient(apiKey)
-
-	resp, err := client.CreateEmbeddings(context.Background(), openai.EmbeddingRequest{
-		Input: []string{text},
-		Model: "text-embedding-ada-002", // You can change the model if needed
-	})
+	cmd := exec.Command("python", "text_embedding_model.py", text)
+	output, err := cmd.Output()
 	if err != nil {
-		log.Fatalf("Failed to get embedding: %v", err)
+		log.Fatal("Error getting text embedding: ", err)
 	}
 
-	embedding := resp.Data[0].Embedding
-	fmt.Println("Text Embedding:", embedding)
-	return embedding*/
+	outputStr := strings.TrimSpace(string(output))
+
+	outputStr = strings.ReplaceAll(outputStr, "[", "")
+	outputStr = strings.ReplaceAll(outputStr, "]", "")
+
+	parts := strings.Split(outputStr, ", ")
+
+	var result []float64
+	for _, part := range parts {
+		value, err := strconv.ParseFloat(part, 64)
+		if err != nil {
+			log.Fatal("Error transformint string to float64: ", err)
+		}
+		result = append(result, value)
+	}
+	return result
 }
 
 func GetNodeAttributes(api_map map[string]interface{}) map[string]interface{} {

@@ -16,5 +16,6 @@ require (
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/knakk/rdf v0.0.0-20190304171630-8521bf4c5042 // indirect
 	github.com/sashabaranov/go-openai v1.35.6 // indirect
+	github.com/yalue/onnxruntime_go v1.13.0 // indirect
 	golang.org/x/net v0.29.0 // indirect
 )
