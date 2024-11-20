@@ -195,7 +195,17 @@ func main() {
 		i++
 	}
 
-	fmt.Println(g.NodeToString(g.Nodes[triples[0].Object]))
+	//komponente := g.GetComponents()
+	/*for _, komp := range komponente {
+		fmt.Println(komp.ToString())
+		fmt.Println()
+		fmt.Println()
+	}*/
+
+	err = g.WriteToFile("graph_data.json")
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
 
 	/*
 		str := strings.Replace("https://semopenalex.org/work/W2140953464", "https://semopenalex.org/work", "https://api.openalex.org/works", 1)

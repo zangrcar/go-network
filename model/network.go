@@ -1,7 +1,9 @@
 package model
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 )
@@ -47,6 +49,19 @@ func MultiGraph() NewGraph {
 	}
 }
 
+func (g *NewGraph) ToJSON() ([]byte, error) {
+	return json.Marshal(g)
+}
+
+// WriteToFile writes the graph data to a JSON file
+func (g *NewGraph) WriteToFile(filename string) error {
+	data, err := g.ToJSON()
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filename, data, 0644)
+}
+
 func (g NewGraph) IsEqual(other NewGraph) bool {
 
 	if g.Type != other.Type || len(g.Nodes) != len(other.Nodes) || len(g.Edges) != len(other.Edges) {
@@ -67,6 +82,22 @@ func (g NewGraph) IsEqual(other NewGraph) bool {
 	}
 
 	return true
+}
+
+func (g NewGraph) Remove_leaves() NewGraph {
+	leaves := []NewNode{}
+
+	for _, node := range g.Nodes {
+		if len(g.Neighbors(node)) == 1 {
+			leaves = append(leaves, node)
+		}
+	}
+
+	k := g
+	for _, leave := range leaves {
+		k.RemoveNode(leave)
+	}
+	return k
 }
 
 func (g NewGraph) Combine(h NewGraph) NewGraph {
@@ -99,7 +130,7 @@ func (g NewGraph) Combine(h NewGraph) NewGraph {
 func (g NewGraph) ToString() string {
 	var str strings.Builder
 	str.WriteString(fmt.Sprintf("Type: %s\n", g.Type))
-	str.WriteString("Nodes:\n")
+	str.WriteString(fmt.Sprintf("Nodes: %d\n", len(g.Nodes)))
 	for key, value := range g.Nodes {
 		str.WriteString(fmt.Sprintf("- ID: %s, attributes: %+v\n", key, value.Attributes))
 	}
@@ -117,25 +148,29 @@ func (g NewGraph) NodeToString(node NewNode) string {
 	return str.String()
 }
 
-func (g NewGraph) NewDFS(startNode NewNode) NewGraph {
+func (g NewGraph) NewDFS(startNode NewNode, visited map[string]bool) NewGraph {
 	_, exists := g.Nodes[startNode.ID]
 	if !exists {
 		return NewGraph{}
 	}
-	visited := make(map[string]bool)
+	vis := make(map[string]bool)
 	visitedGraph := NewGraph{
 		Nodes: make(map[string]NewNode),
 		Edges: make(map[int]NewEdge),
 	}
-	g.NewDfsUtil(startNode, visited, visitedGraph)
+	g.NewDfsUtil(startNode, vis, &visitedGraph)
+	for key, value := range vis {
+		visited[key] = value
+	}
 	return visitedGraph
 }
 
-func (g NewGraph) NewDfsUtil(node NewNode, visited map[string]bool, visitedGraph NewGraph) {
+func (g NewGraph) NewDfsUtil(node NewNode, visited map[string]bool, visitedGraph *NewGraph) {
 	visited[node.ID] = true
 	visitedGraph.AddNode(node)
 
 	for _, neighbor := range g.Neighbors(node) {
+
 		if !visited[neighbor.ID] {
 			e := g.GetEdgeByNodes(node, neighbor)
 			visitedGraph.AddEdge(NewEdge{First_node: node, Second_node: neighbor, Attributes: e.Attributes})
@@ -152,7 +187,8 @@ func (g NewGraph) GetComponents() []NewGraph {
 	components := []NewGraph{}
 	x := GetTrueString(visited)
 	for x != "" {
-		components = append(components, g.NewDFS(*g.GetNode(x)))
+		components = append(components, g.NewDFS(*g.GetNode(x), visited))
+		x = GetTrueString(visited)
 	}
 	return components
 }
@@ -181,9 +217,9 @@ func CompareNodes(n1, n2 NewNode) bool {
 	return true*/
 }
 
-func (g NewGraph) AddNode(node NewNode) NewGraph {
-	for _, value := range g.Nodes {
-		if CompareNodes(node, value) {
+func (g *NewGraph) AddNode(node NewNode) {
+	for key := range g.Nodes {
+		if node.ID == key {
 			for key, value := range node.Attributes {
 				existingvalue, isfound := g.GetNode(node.ID).Attributes[key]
 				if isfound {
@@ -198,11 +234,10 @@ func (g NewGraph) AddNode(node NewNode) NewGraph {
 					g.GetNode(node.ID).Attributes[key] = value
 				}
 			}
-			return g
+			return
 		}
 	}
 	g.Nodes[node.ID] = node
-	return g
 }
 
 func (g NewGraph) AddNodesFrom(arr []NewNode) NewGraph {
@@ -248,9 +283,9 @@ func (g NewGraph) Neighbors(n NewNode) []NewNode {
 
 	for _, edge := range g.Edges {
 		if CompareNodes(edge.First_node, n) {
-			neighbors = append(neighbors, edge.First_node)
-		} else if CompareNodes(edge.Second_node, n) {
 			neighbors = append(neighbors, edge.Second_node)
+		} else if CompareNodes(edge.Second_node, n) {
+			neighbors = append(neighbors, edge.First_node)
 		}
 	}
 
@@ -531,7 +566,7 @@ func (g NewGraph) HasEdge(e NewEdge) bool {
 	return false
 }
 
-func (g NewGraph) AddEdge(edge NewEdge) NewGraph {
+func (g *NewGraph) AddEdge(edge NewEdge) {
 	for _, value := range g.Edges {
 		if g.CompareEdges(edge, value) {
 			for key, value := range edge.Attributes {
@@ -548,7 +583,7 @@ func (g NewGraph) AddEdge(edge NewEdge) NewGraph {
 					g.GetEdge(edge).Attributes[key] = value
 				}
 			}
-			return g
+			return
 		}
 	}
 	if !g.HasNode(edge.First_node) {
@@ -558,7 +593,7 @@ func (g NewGraph) AddEdge(edge NewEdge) NewGraph {
 		g.AddNode(edge.Second_node)
 	}
 	g.Edges[len(g.Edges)] = edge
-	return g
+	return
 }
 
 func (g NewGraph) AddEdgesFrom(arr []NewEdge) NewGraph {
