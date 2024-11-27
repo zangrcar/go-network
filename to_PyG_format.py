@@ -44,3 +44,5 @@ data = Data(x=node_features, edge_index=edge_index, edge_attr=edge_attr)
 
 # Print the created Data object
 print(data)
+
+torch.save(data, 'citation_data_tiny_with_combined_leaves.pt')

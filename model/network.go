@@ -84,7 +84,7 @@ func (g NewGraph) IsEqual(other NewGraph) bool {
 	return true
 }
 
-func (g NewGraph) Remove_leaves() NewGraph {
+func (g NewGraph) RemoveLeaves() NewGraph {
 	leaves := []NewNode{}
 
 	for _, node := range g.Nodes {
@@ -98,6 +98,46 @@ func (g NewGraph) Remove_leaves() NewGraph {
 		k.RemoveNode(leave)
 	}
 	return k
+}
+
+func (g *NewGraph) CombineLeaves() {
+	leaves := []NewNode{}
+
+	for _, node := range g.Nodes {
+		if len(g.Neighbors(node)) == 1 {
+			leaves = append(leaves, node)
+		}
+	}
+
+	N := make(map[string]NewNode)
+	E := make(map[int]NewEdge)
+	for key, value := range g.Edges {
+		E[key] = value
+	}
+	for _, leave := range leaves {
+		x := g.Neighbors(leave)[0]
+		n := g.CombineNodes(leave, x, StrategyArray{}, StrategyArray{})
+		g.Nodes[x.ID] = n
+		for _, node := range g.Neighbors(x) {
+			e, edge_idx := g.GetEdgeByNodes(x, node)
+			if e.First_node.ID == leave.ID || e.Second_node.ID == leave.ID {
+				g.RemoveEdge(e)
+			} else {
+				if e.First_node.ID == x.ID {
+					e.First_node = n
+				} else {
+					e.Second_node = n
+				}
+			}
+			g.Edges[edge_idx] = e
+
+		}
+		*g = g.RemoveNode(leave)
+	}
+	for _, value := range g.Nodes {
+		N[value.ID] = value
+	}
+	g.Nodes = N
 }
 
 func (g NewGraph) Combine(h NewGraph) NewGraph {
@@ -172,7 +212,7 @@ func (g NewGraph) NewDfsUtil(node NewNode, visited map[string]bool, visitedGraph
 	for _, neighbor := range g.Neighbors(node) {
 
 		if !visited[neighbor.ID] {
-			e := g.GetEdgeByNodes(node, neighbor)
+			e, _ := g.GetEdgeByNodes(node, neighbor)
 			visitedGraph.AddEdge(NewEdge{First_node: node, Second_node: neighbor, Attributes: e.Attributes})
 			g.NewDfsUtil(neighbor, visited, visitedGraph)
 		}
@@ -297,6 +337,11 @@ func (g NewGraph) RemoveNode(n NewNode) NewGraph {
 	for i, node := range g.Nodes {
 		if CompareNodes(node, n) {
 			delete(g.Nodes, i)
+			for j, edge := range g.Edges {
+				if edge.First_node.ID == i || edge.Second_node.ID == i {
+					delete(g.Edges, j)
+				}
+			}
 		}
 	}
 	return g
@@ -343,118 +388,164 @@ type StrategyArray struct{}
 type StrategyRetainMax struct{}
 type StrategyRetainMin struct{}
 
-func (s StrategyRetainMin) CombineInt(n1, n2 int) int {
+func (s StrategyRetainMin) CombineInt(v1, v2 interface{}) interface{} {
+	n1, _ := v1.(int)
+	n2, _ := v2.(int)
 	if n1 <= n2 {
 		return n1
 	}
 	return n2
 }
 
-func (s StrategyRetainMin) CombineFloat32(n1, n2 float32) float32 {
+func (s StrategyRetainMin) CombineFloat32(v1, v2 interface{}) interface{} {
+	n1, _ := v1.(float32)
+	n2, _ := v2.(float32)
 	if n1 <= n2 {
 		return n1
 	}
 	return n2
 }
 
-func (s StrategyRetainMin) CombineFloat64(n1, n2 float64) float64 {
+func (s StrategyRetainMin) CombineFloat64(v1, v2 interface{}) interface{} {
+	n1, _ := v1.(float64)
+	n2, _ := v2.(float64)
 	if n1 <= n2 {
 		return n1
 	}
 	return n2
 }
 
-func (s StrategyRetainMin) CombineString(n1, n2 string) string {
+func (s StrategyRetainMin) CombineString(v1, v2 interface{}) interface{} {
+	n1, _ := v1.(string)
+	n2, _ := v2.(string)
 	if n1 <= n2 {
 		return n1
 	}
 	return n2
 }
 
-func (s StrategyRetainMax) CombineInt(n1, n2 int) int {
+func (s StrategyRetainMax) CombineInt(v1, v2 interface{}) interface{} {
+	n1, _ := v1.(int)
+	n2, _ := v2.(int)
 	if n1 >= n2 {
 		return n1
 	}
 	return n2
 }
 
-func (s StrategyRetainMax) CombineFloat32(n1, n2 float32) float32 {
+func (s StrategyRetainMax) CombineFloat32(v1, v2 interface{}) interface{} {
+	n1, _ := v1.(float32)
+	n2, _ := v2.(float32)
 	if n1 >= n2 {
 		return n1
 	}
 	return n2
 }
 
-func (s StrategyRetainMax) CombineFloat64(n1, n2 float64) float64 {
+func (s StrategyRetainMax) CombineFloat64(v1, v2 interface{}) interface{} {
+	n1, _ := v1.(float64)
+	n2, _ := v2.(float64)
 	if n1 >= n2 {
 		return n1
 	}
 	return n2
 }
 
-func (s StrategyRetainMax) CombineString(n1, n2 string) string {
+func (s StrategyRetainMax) CombineString(v1, v2 interface{}) interface{} {
+	n1, _ := v1.(string)
+	n2, _ := v2.(string)
 	if n1 >= n2 {
 		return n1
 	}
 	return n2
 }
 
-func (s StrategyAvgNum) CombineInt(n1, n2 int) int {
+func (s StrategyAvgNum) CombineInt(v1, v2 interface{}) interface{} {
+	n1, _ := v1.(int)
+	n2, _ := v2.(int)
 	return (n1 + n2) / 2
 }
 
-func (s StrategyAvgNum) CombineFloat32(n1, n2 float32) float32 {
+func (s StrategyAvgNum) CombineFloat32(v1, v2 interface{}) interface{} {
+	n1, _ := v1.(float32)
+	n2, _ := v2.(float32)
 	return (n1 + n2) / 2
 }
 
-func (s StrategyAvgNum) CombineFloat64(n1, n2 float64) float64 {
+func (s StrategyAvgNum) CombineFloat64(v1, v2 interface{}) interface{} {
+	n1, _ := v1.(float64)
+	n2, _ := v2.(float64)
 	return (n1 + n2) / 2
 }
 
-func (s StrategyArray) CombineInt(n1, n2 interface{}) []int {
-	if !(reflect.TypeOf(n1).Kind() == reflect.Slice) {
-		nv := n1.(int)
-		n1 = []int{nv}
+func (s StrategyArray) CombineInt(v1, v2 interface{}) interface{} {
+	if !(reflect.TypeOf(v1).Kind() == reflect.Slice) {
+		nv := v1.(int)
+		v1 = []int{nv}
+	} else {
+		n1 := v1
+		v1, _ = n1.([]int)
 	}
-	if !(reflect.TypeOf(n2).Kind() == reflect.Slice) {
-		nv := n2.(int)
-		n2 = []int{nv}
+	if !(reflect.TypeOf(v2).Kind() == reflect.Slice) {
+		nv := v2.(int)
+		v2 = []int{nv}
+	} else {
+		n2 := v2
+		v2 = n2.([]int)
 	}
-	return append(n1.([]int), n2.([]int)...)
+	return append(v1.([]int), v2.([]int)...)
 }
 
-func (s StrategyArray) CombineFloat32(n1, n2 interface{}) []float32 {
+func (s StrategyArray) CombineFloat32(n1, n2 interface{}) interface{} {
 	if !(reflect.TypeOf(n1).Kind() == reflect.Slice) {
 		nv := n1.(float32)
 		n1 = []float32{nv}
+	} else {
+		v := n1
+		n1 = v.([]float32)
 	}
 	if !(reflect.TypeOf(n2).Kind() == reflect.Slice) {
 		nv := n2.(float32)
 		n2 = []float32{nv}
+	} else {
+		v := n2
+		n2 = v.([]float32)
 	}
 	return append(n1.([]float32), n2.([]float32)...)
 }
 
-func (s StrategyArray) CombineFloat64(n1, n2 interface{}) []float64 {
+func (s StrategyArray) CombineFloat64(n1, n2 interface{}) interface{} {
 	if !(reflect.TypeOf(n1).Kind() == reflect.Slice) {
 		nv := n1.(float64)
 		n1 = []float64{nv}
+	} else {
+		v := n1
+		n1 = v.([]float64)
 	}
 	if !(reflect.TypeOf(n2).Kind() == reflect.Slice) {
 		nv := n2.(float64)
 		n2 = []float64{nv}
+	} else {
+		v := n1
+		n1 = v.([]float64)
 	}
 	return append(n1.([]float64), n2.([]float64)...)
 }
 
-func (s StrategyArray) CombineString(n1, n2 interface{}) []string {
+func (s StrategyArray) CombineString(n1, n2 interface{}) interface{} {
 	if !(reflect.TypeOf(n1).Kind() == reflect.Slice) {
 		nv := n1.(string)
 		n1 = []string{nv}
+	} else {
+		v := n1
+		n1 = v.([]string)
 	}
 	if !(reflect.TypeOf(n2).Kind() == reflect.Slice) {
 		nv := n2.(string)
 		n2 = []string{nv}
+	} else {
+		v := n1
+		n1 = v.([]string)
 	}
 	return append(n1.([]string), n2.([]string)...)
 }
@@ -495,7 +586,7 @@ func (g NewGraph) CombineNodes(n1, n2 NewNode, strat_num, strat_string CombineSt
 	return NewNode{ID: id, Attributes: att}
 }
 
-func (g NewGraph) ContractNewEdge(e NewEdge, strategy_num CombineStrategy, strategy_string CombineStrategy) {
+func (g *NewGraph) ContractNewEdge(e NewEdge, strategy_num CombineStrategy, strategy_string CombineStrategy) {
 	if !g.HasEdge(e) {
 		fmt.Println("This graph does not have this edge.")
 		return
@@ -593,7 +684,6 @@ func (g *NewGraph) AddEdge(edge NewEdge) {
 		g.AddNode(edge.Second_node)
 	}
 	g.Edges[len(g.Edges)] = edge
-	return
 }
 
 func (g NewGraph) AddEdgesFrom(arr []NewEdge) NewGraph {
@@ -612,14 +702,14 @@ func (g NewGraph) GetEdge(e NewEdge) *NewEdge {
 	return nil
 }
 
-func (g NewGraph) GetEdgeByNodes(n1, n2 NewNode) NewEdge {
-	for _, edge := range g.Edges {
+func (g NewGraph) GetEdgeByNodes(n1, n2 NewNode) (NewEdge, int) {
+	for i, edge := range g.Edges {
 		if (CompareNodes(edge.First_node, n1) && CompareNodes(edge.Second_node, n2)) || (CompareNodes(edge.First_node, n2) && CompareNodes(edge.Second_node, n1)) {
-			return edge
+			return edge, i
 		}
 	}
 	fmt.Println("this graph does not have edge between these two nodes.")
-	return NewEdge{First_node: n1, Second_node: n2, Attributes: map[string]interface{}{}}
+	return NewEdge{First_node: n1, Second_node: n2, Attributes: map[string]interface{}{}}, len(g.Edges)
 }
 
 func (g NewGraph) AddEdgeAttribute(e NewEdge, att string, value interface{}) NewGraph {

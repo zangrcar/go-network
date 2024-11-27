@@ -163,25 +163,24 @@ func main() {
 	}
 
 	i := 0
-
 	for _, triple := range triples {
 		value, ok := g.Nodes[triple.Subject]
 		value2, ok2 := g.Nodes[triple.Object]
 		if !ok {
-			str := strings.Replace(triple.Subject, "https://semopenalex.org/work", "https://api.openalex.org/works", 1)
-			api_map := OnPage(str)
+			//str := strings.Replace(triple.Subject, "https://semopenalex.org/work", "https://api.openalex.org/works", 1)
+			//api_map := OnPage(str)
 			value = model.NewNode{
 				ID:         triple.Subject,
-				Attributes: GetNodeAttributes(api_map),
+				Attributes: map[string]interface{}{}, //GetNodeAttributes(api_map),
 			}
 			g.AddNode(value)
 		}
 		if !ok2 {
-			str := strings.Replace(triple.Object, "https://semopenalex.org/work", "https://api.openalex.org/works", 1)
-			api_map := OnPage(str)
+			//str := strings.Replace(triple.Object, "https://semopenalex.org/work", "https://api.openalex.org/works", 1)
+			//api_map := OnPage(str)
 			value2 = model.NewNode{
 				ID:         triple.Object,
-				Attributes: GetNodeAttributes(api_map),
+				Attributes: map[string]interface{}{}, //GetNodeAttributes(api_map),
 			}
 			g.AddNode(value2)
 		}
@@ -194,36 +193,11 @@ func main() {
 		fmt.Println(i)
 		i++
 	}
-
-	//komponente := g.GetComponents()
-	/*for _, komp := range komponente {
-		fmt.Println(komp.ToString())
-		fmt.Println()
-		fmt.Println()
-	}*/
+	fmt.Println(len(g.Nodes), len(g.Edges))
+	g.CombineLeaves()
 
 	err = g.WriteToFile("graph_data.json")
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
-
-	/*
-		str := strings.Replace("https://semopenalex.org/work/W2140953464", "https://semopenalex.org/work", "https://api.openalex.org/works", 1)
-		fmt.Println(str)
-
-		m := OnPage(str)
-
-		fmt.Printf("%d\n", len(m))
-
-		x := m["abstract_inverted_index"]
-
-		fmt.Println(reflect.TypeOf(x))
-		GetKeywords(m)
-		/*if intSlice, ok := x.(map[string]interface{}); ok {
-			for key, value := range intSlice {
-				fmt.Println(key, value)
-			}
-		} else {
-			fmt.Println("x is not a slice of ints")
-		}*/
 }
