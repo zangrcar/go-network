@@ -1,5 +1,11 @@
 package main
 
+/*
+This file extracts data for citation network from turtle (.ttl) file. It not only extracts connections between different
+citations, but also extracts some of the key elements from each link. It extracts keywords and text which is transformed
+and saved as an embedding.
+*/
+
 import (
 	"encoding/json"
 	"fmt"
@@ -12,11 +18,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jmCodeCraft/go-network/model"
 	"github.com/nvkp/turtle"
 )
-
-//"github.com/jmCodeCraft/go-network/model"
 
 type Triple struct {
 	Subject   string `turtle:"subject"`
@@ -134,12 +137,11 @@ func GetNodeAttributes(api_map map[string]interface{}) map[string]interface{} {
 	return attr
 }
 
-func main() {
-
-	file, err := os.Open("citation_network_tiny.ttl")
+func Extract(file_name string) string {
+	file, err := os.Open(file_name) //"citation_network_tiny.ttl"
 	if err != nil {
 		fmt.Println("Error opening file:", err)
-		return
+		return ""
 	}
 	defer file.Close()
 
@@ -148,56 +150,55 @@ func main() {
 	byteFile, err := io.ReadAll(file)
 	if err != nil {
 		fmt.Println("Error converting file:", err)
-		return
+		return ""
 	}
 	err = turtle.Unmarshal(byteFile, &triples)
 	if err != nil {
 		fmt.Println("Error unmarshaling Turtle data:", err)
-		return
+		return ""
 	}
 
-	g := model.NewGraph{
-		Nodes: map[string]model.NewNode{},
-		Edges: map[int]model.NewEdge{},
-		Type:  "graph",
-	}
-
-	i := 0
+	allAttributes := make(map[string]map[string]interface{})
 	for _, triple := range triples {
-		value, ok := g.Nodes[triple.Subject]
-		value2, ok2 := g.Nodes[triple.Object]
-		if !ok {
+		_, ok1 := allAttributes[triple.Subject]
+		_, ok2 := allAttributes[triple.Object]
+		if !ok1 {
 			//str := strings.Replace(triple.Subject, "https://semopenalex.org/work", "https://api.openalex.org/works", 1)
 			//api_map := OnPage(str)
-			value = model.NewNode{
-				ID:         triple.Subject,
-				Attributes: map[string]interface{}{}, //GetNodeAttributes(api_map),
-			}
-			g.AddNode(value)
+			allAttributes[triple.Subject] = map[string]interface{}{} //GetNodeAttributes(api_map)
 		}
+
 		if !ok2 {
 			//str := strings.Replace(triple.Object, "https://semopenalex.org/work", "https://api.openalex.org/works", 1)
 			//api_map := OnPage(str)
-			value2 = model.NewNode{
-				ID:         triple.Object,
-				Attributes: map[string]interface{}{}, //GetNodeAttributes(api_map),
-			}
-			g.AddNode(value2)
+			allAttributes[triple.Object] = map[string]interface{}{} //GetNodeAttributes(api_map)
 		}
-		g.AddEdge(model.NewEdge{
-			First_node:  value,
-			Second_node: value2,
-			Attributes:  map[string]interface{}{},
-		})
+		_, exists := allAttributes[triple.Subject]["neighbors"]
 
-		fmt.Println(i)
-		i++
+		if !exists {
+			var neighbors []string
+			allAttributes[triple.Subject]["neighbors"] = neighbors
+		}
+
+		allAttributes[triple.Subject]["neighbors"] = append(allAttributes[triple.Subject]["neighbors"].([]string), triple.Object)
 	}
-	fmt.Println(len(g.Nodes), len(g.Edges))
-	g.CombineLeaves()
 
-	err = g.WriteToFile("graph_data.json")
+	newfile_name := "citatioen_network_tiny_extracted_data.json"
+
+	newfile, err := os.Create(newfile_name)
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Println("Error creating file:", err)
+		return ""
 	}
+	defer newfile.Close()
+
+	encoder := json.NewEncoder(newfile)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(allAttributes); err != nil {
+		fmt.Println("Error encoding JSON:", err)
+		return ""
+	}
+
+	fmt.Println("Data extraction succesful!")
+	return newfile_name
 }

@@ -1,7 +1,9 @@
+"""
+This file transforms text saved as string into text embedding, later saved as one of the attributes for nodes.
+"""
 from sentence_transformers import SentenceTransformer
 import sys
 import json
-
 
 def process(str):
     model = SentenceTransformer('all-MiniLM-L6-v2')

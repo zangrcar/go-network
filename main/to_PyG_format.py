@@ -1,3 +1,7 @@
+"""
+This file transforms Graph created by this library to a format that is readable by Pytorch Geometric library.
+"""
+
 import json
 import torch
 from torch_geometric.data import Data
@@ -45,4 +49,5 @@ data = Data(x=node_features, edge_index=edge_index, edge_attr=edge_attr)
 # Print the created Data object
 print(data)
 
-torch.save(data, 'citation_data_tiny_with_combined_leaves.pt')
+torch.save(data, 'citation_data_tiny_full.pt')
+#citation_data_tiny_with_combined_leaves_full

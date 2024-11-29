@@ -49,6 +49,7 @@ func MultiGraph() NewGraph {
 	}
 }
 
+// Transorfms NewGraph to byte data
 func (g *NewGraph) ToJSON() ([]byte, error) {
 	return json.Marshal(g)
 }
@@ -62,6 +63,7 @@ func (g *NewGraph) WriteToFile(filename string) error {
 	return os.WriteFile(filename, data, 0644)
 }
 
+// Compares two graphs
 func (g NewGraph) IsEqual(other NewGraph) bool {
 
 	if g.Type != other.Type || len(g.Nodes) != len(other.Nodes) || len(g.Edges) != len(other.Edges) {
@@ -84,6 +86,7 @@ func (g NewGraph) IsEqual(other NewGraph) bool {
 	return true
 }
 
+// Removes from graph all nodes that have only one neighbor
 func (g NewGraph) RemoveLeaves() NewGraph {
 	leaves := []NewNode{}
 
@@ -100,6 +103,7 @@ func (g NewGraph) RemoveLeaves() NewGraph {
 	return k
 }
 
+// Combines nodes in graph, that have only one neighbor, with their neighbor
 func (g *NewGraph) CombineLeaves() {
 	leaves := []NewNode{}
 
@@ -140,6 +144,7 @@ func (g *NewGraph) CombineLeaves() {
 	g.Nodes = N
 }
 
+// Combines two graphs into one
 func (g NewGraph) Combine(h NewGraph) NewGraph {
 	if g.Type != h.Type {
 		fmt.Println("Graphs must be the same type!")
@@ -167,6 +172,7 @@ func (g NewGraph) Combine(h NewGraph) NewGraph {
 	return k
 }
 
+// Returns a string description of a graph
 func (g NewGraph) ToString() string {
 	var str strings.Builder
 	str.WriteString(fmt.Sprintf("Type: %s\n", g.Type))
@@ -181,6 +187,7 @@ func (g NewGraph) ToString() string {
 	return str.String()
 }
 
+// Returns a string description of a node
 func (g NewGraph) NodeToString(node NewNode) string {
 	var str strings.Builder
 	str.WriteString("Nodes:\n")
@@ -188,6 +195,7 @@ func (g NewGraph) NodeToString(node NewNode) string {
 	return str.String()
 }
 
+// DFS algorithm
 func (g NewGraph) NewDFS(startNode NewNode, visited map[string]bool) NewGraph {
 	_, exists := g.Nodes[startNode.ID]
 	if !exists {
@@ -219,6 +227,7 @@ func (g NewGraph) NewDfsUtil(node NewNode, visited map[string]bool, visitedGraph
 	}
 }
 
+// returns a slice of all components, separated (each graph in a slice only has one component)
 func (g NewGraph) GetComponents() []NewGraph {
 	visited := make(map[string]bool)
 	for key := range g.Nodes {
@@ -242,6 +251,7 @@ func GetTrueString(x map[string]bool) string {
 	return ""
 }
 
+// Compares nodes - Will be updated with different versions of graphs
 func CompareNodes(n1, n2 NewNode) bool {
 	return n1.ID == n2.ID
 	/*if n1.ID != n2.ID || len(n1.Attributes) != len(n2.Attributes) {
@@ -257,6 +267,7 @@ func CompareNodes(n1, n2 NewNode) bool {
 	return true*/
 }
 
+// Adds a node to a graph
 func (g *NewGraph) AddNode(node NewNode) {
 	for key := range g.Nodes {
 		if node.ID == key {
@@ -280,6 +291,7 @@ func (g *NewGraph) AddNode(node NewNode) {
 	g.Nodes[node.ID] = node
 }
 
+// Adds nodes from a slice to a graph
 func (g NewGraph) AddNodesFrom(arr []NewNode) NewGraph {
 	for _, node := range arr {
 		g.AddNode(node)
@@ -287,6 +299,7 @@ func (g NewGraph) AddNodesFrom(arr []NewNode) NewGraph {
 	return g
 }
 
+// Checks if graph already has node n
 func (g NewGraph) HasNode(n NewNode) bool {
 	for _, node := range g.Nodes {
 		if CompareNodes(n, node) {
@@ -296,6 +309,7 @@ func (g NewGraph) HasNode(n NewNode) bool {
 	return false
 }
 
+// Returns a node in graph with provided id
 func (g NewGraph) GetNode(id string) *NewNode {
 	for _, node := range g.Nodes {
 		if node.ID == id {
@@ -305,6 +319,7 @@ func (g NewGraph) GetNode(id string) *NewNode {
 	return nil
 }
 
+// Adds an attribute to a node with corresponding id
 func (g NewGraph) AddNodeAttribute(node_id string, att string, value interface{}) NewGraph {
 	if g.GetNode(node_id) == nil {
 		fmt.Println("this graph does not have node with id:", node_id)
@@ -314,10 +329,12 @@ func (g NewGraph) AddNodeAttribute(node_id string, att string, value interface{}
 	return g
 }
 
+// Returns the number of nodes in graph
 func (g NewGraph) NumberOfNodes() int {
 	return len(g.Nodes)
 }
 
+// Returns a slice, which contains all of the neighbors of a provided node
 func (g NewGraph) Neighbors(n NewNode) []NewNode {
 	neighbors := []NewNode{}
 
@@ -333,6 +350,7 @@ func (g NewGraph) Neighbors(n NewNode) []NewNode {
 
 }
 
+// Removes node from a graph
 func (g NewGraph) RemoveNode(n NewNode) NewGraph {
 	for i, node := range g.Nodes {
 		if CompareNodes(node, n) {
@@ -347,6 +365,7 @@ func (g NewGraph) RemoveNode(n NewNode) NewGraph {
 	return g
 }
 
+// Returns the number of neighbors this node has.
 func (g NewGraph) NodeDegree(n NewNode) int {
 	counter := 0
 	for _, edge := range g.Edges {
@@ -357,6 +376,7 @@ func (g NewGraph) NodeDegree(n NewNode) int {
 	return counter
 }
 
+// Deletes a node from a graph and connects all of the neighbours of deleted node
 func (g NewGraph) ContractNewNode(n NewNode) {
 	if !g.HasNode(n) {
 		fmt.Println("This graph does not have this node.")
@@ -376,6 +396,7 @@ func (g NewGraph) ContractNewNode(n NewNode) {
 	g.RemoveNode(n)
 }
 
+// Next we have different strategies for combining two nodes
 type CombineStrategy interface {
 	CombineInt(n1, n2 interface{}) interface{}
 	CombineFloat32(n1, n2 interface{}) interface{}
@@ -550,6 +571,7 @@ func (s StrategyArray) CombineString(n1, n2 interface{}) interface{} {
 	return append(n1.([]string), n2.([]string)...)
 }
 
+// Combines two nodes based on provided strategies
 func (g NewGraph) CombineNodes(n1, n2 NewNode, strat_num, strat_string CombineStrategy) NewNode {
 	id := ""
 	if n1.ID < n2.ID {
@@ -586,6 +608,7 @@ func (g NewGraph) CombineNodes(n1, n2 NewNode, strat_num, strat_string CombineSt
 	return NewNode{ID: id, Attributes: att}
 }
 
+// Deletes an edge in graph and combines the nodes that it was connecting
 func (g *NewGraph) ContractNewEdge(e NewEdge, strategy_num CombineStrategy, strategy_string CombineStrategy) {
 	if !g.HasEdge(e) {
 		fmt.Println("This graph does not have this edge.")
@@ -618,6 +641,7 @@ func (g *NewGraph) ContractNewEdge(e NewEdge, strategy_num CombineStrategy, stra
 
 }
 
+// returns unique string representing an edge
 func (g NewGraph) EdgeID(e NewEdge) string {
 	if e.First_node.ID < e.Second_node.ID || g.Type == "digraph" {
 		return e.First_node.ID + "-" + e.Second_node.ID
@@ -626,6 +650,7 @@ func (g NewGraph) EdgeID(e NewEdge) string {
 	}
 }
 
+// Compares two edges
 func (g NewGraph) CompareEdges(e1, e2 NewEdge) bool {
 	if !((CompareNodes(e1.First_node, e2.First_node) && CompareNodes(e1.Second_node, e2.Second_node)) || (CompareNodes(e1.First_node, e2.Second_node) && CompareNodes(e1.Second_node, e2.First_node))) {
 		return false
@@ -648,6 +673,7 @@ func (g NewGraph) CompareEdges(e1, e2 NewEdge) bool {
 	return true
 }
 
+// Tells if a graph elready has this edge
 func (g NewGraph) HasEdge(e NewEdge) bool {
 	for _, edge := range g.Edges {
 		if g.CompareEdges(e, edge) {
@@ -657,6 +683,7 @@ func (g NewGraph) HasEdge(e NewEdge) bool {
 	return false
 }
 
+// Adds an edge to the graph
 func (g *NewGraph) AddEdge(edge NewEdge) {
 	for _, value := range g.Edges {
 		if g.CompareEdges(edge, value) {
@@ -686,6 +713,7 @@ func (g *NewGraph) AddEdge(edge NewEdge) {
 	g.Edges[len(g.Edges)] = edge
 }
 
+// Adds all edges from provided slice to the graph
 func (g NewGraph) AddEdgesFrom(arr []NewEdge) NewGraph {
 	for _, edge := range arr {
 		g.AddEdge(edge)
@@ -693,6 +721,7 @@ func (g NewGraph) AddEdgesFrom(arr []NewEdge) NewGraph {
 	return g
 }
 
+// Returns edge from graph
 func (g NewGraph) GetEdge(e NewEdge) *NewEdge {
 	for _, edge := range g.Edges {
 		if g.CompareEdges(e, edge) {
@@ -702,6 +731,7 @@ func (g NewGraph) GetEdge(e NewEdge) *NewEdge {
 	return nil
 }
 
+// Returns edge from the graph, that connects these two nodes
 func (g NewGraph) GetEdgeByNodes(n1, n2 NewNode) (NewEdge, int) {
 	for i, edge := range g.Edges {
 		if (CompareNodes(edge.First_node, n1) && CompareNodes(edge.Second_node, n2)) || (CompareNodes(edge.First_node, n2) && CompareNodes(edge.Second_node, n1)) {
@@ -712,6 +742,7 @@ func (g NewGraph) GetEdgeByNodes(n1, n2 NewNode) (NewEdge, int) {
 	return NewEdge{First_node: n1, Second_node: n2, Attributes: map[string]interface{}{}}, len(g.Edges)
 }
 
+// Adds an attribute to the edge
 func (g NewGraph) AddEdgeAttribute(e NewEdge, att string, value interface{}) NewGraph {
 	if g.GetEdge(e) == nil {
 		fmt.Println("this graph does not have this edge:", e)
@@ -721,10 +752,12 @@ func (g NewGraph) AddEdgeAttribute(e NewEdge, att string, value interface{}) New
 	return g
 }
 
+// Returns the number of edges that this graph has
 func (g NewGraph) NumberOfEdges() int {
 	return len(g.Edges)
 }
 
+// Removes edge from a graph
 func (g NewGraph) RemoveEdge(e NewEdge) NewGraph {
 	for i, edge := range g.Edges {
 		if g.CompareEdges(e, edge) {

@@ -1,3 +1,8 @@
+"""
+This file creates graph embedding from graph, trasformed into format readable by Pytorch Geometric python library.
+"""
+
+
 import torch
 from torch_geometric.nn import Node2Vec
 import warnings
@@ -8,7 +13,7 @@ def main():
     # Suppress specific warning
     warnings.filterwarnings("ignore", category=FutureWarning)
 
-    data = torch.load('citation_data_tiny_with_combined_leaves.pt')
+    data = torch.load('citation_data_tiny_full.pt')
     #mp.set_start_method('spawn', force=True)
     model = Node2Vec(
         data.edge_index,
