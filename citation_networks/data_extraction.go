@@ -1,4 +1,4 @@
-package main
+package citation
 
 /*
 This file extracts data for citation network from turtle (.ttl) file. It not only extracts connections between different
@@ -163,15 +163,15 @@ func Extract(file_name string) string {
 		_, ok1 := allAttributes[triple.Subject]
 		_, ok2 := allAttributes[triple.Object]
 		if !ok1 {
-			//str := strings.Replace(triple.Subject, "https://semopenalex.org/work", "https://api.openalex.org/works", 1)
-			//api_map := OnPage(str)
-			allAttributes[triple.Subject] = map[string]interface{}{} //GetNodeAttributes(api_map)
+			str := strings.Replace(triple.Subject, "https://semopenalex.org/work", "https://api.openalex.org/works", 1)
+			api_map := OnPage(str)
+			allAttributes[triple.Subject] = /*map[string]interface{}{}*/ GetNodeAttributes(api_map)
 		}
 
 		if !ok2 {
-			//str := strings.Replace(triple.Object, "https://semopenalex.org/work", "https://api.openalex.org/works", 1)
-			//api_map := OnPage(str)
-			allAttributes[triple.Object] = map[string]interface{}{} //GetNodeAttributes(api_map)
+			str := strings.Replace(triple.Object, "https://semopenalex.org/work", "https://api.openalex.org/works", 1)
+			api_map := OnPage(str)
+			allAttributes[triple.Object] = /*map[string]interface{}{}*/ GetNodeAttributes(api_map)
 		}
 		_, exists := allAttributes[triple.Subject]["neighbors"]
 

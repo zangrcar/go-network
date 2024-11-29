@@ -1,4 +1,4 @@
-package main
+package citation
 
 /*
 This file creates graph from already extracted data +, that is saved in a map[string]map[string]interface{} and exported to json file.

@@ -1,12 +1,14 @@
 package main
 
+import citation "github.com/jmCodeCraft/go-network/citation_networks"
+
 //"github.com/jmCodeCraft/go-network/model"
 
 func main() {
 
-	extraction_file_name := "citation_network_tiny.ttl"
+	extraction_file_name := "citation_networks/citation_network_tiny.ttl"
 
-	_ = Extract(extraction_file_name)
+	_ = citation.Extract(extraction_file_name)
 	/*
 		k := Create_graph(atribute_map_name)
 		g := *k
