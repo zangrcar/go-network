@@ -5,6 +5,9 @@ This file transforms Graph created by this library to a format that is readable 
 import json
 import torch
 from torch_geometric.data import Data
+import time
+
+start = time.perf_counter_ns()
 
 # Read the graph data from the JSON file
 with open('graph_data.json') as f:
@@ -51,3 +54,6 @@ print(data)
 
 torch.save(data, 'citation_data_tiny_full.pt')
 #citation_data_tiny_with_combined_leaves_full
+
+end = time.perf_counter_ns()
+print(f"{end-start}ns")

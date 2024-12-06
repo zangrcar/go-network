@@ -87,7 +87,7 @@ func (g NewGraph) IsEqual(other NewGraph) bool {
 }
 
 // Removes from graph all nodes that have only one neighbor
-func (g NewGraph) RemoveLeaves() NewGraph {
+func (g *NewGraph) RemoveLeaves() {
 	leaves := []NewNode{}
 
 	for _, node := range g.Nodes {
@@ -100,7 +100,6 @@ func (g NewGraph) RemoveLeaves() NewGraph {
 	for _, leave := range leaves {
 		k.RemoveNode(leave)
 	}
-	return k
 }
 
 // Combines nodes in graph, that have only one neighbor, with their neighbor
@@ -114,10 +113,6 @@ func (g *NewGraph) CombineLeaves() {
 	}
 
 	N := make(map[string]NewNode)
-	E := make(map[int]NewEdge)
-	for key, value := range g.Edges {
-		E[key] = value
-	}
 	for _, leave := range leaves {
 		x := g.Neighbors(leave)[0]
 		n := g.CombineNodes(leave, x, StrategyArray{}, StrategyArray{})
@@ -137,6 +132,7 @@ func (g *NewGraph) CombineLeaves() {
 
 		}
 		*g = g.RemoveNode(leave)
+		*g = g.RemoveNode(x)
 	}
 	for _, value := range g.Nodes {
 		N[value.ID] = value

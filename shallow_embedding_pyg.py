@@ -6,6 +6,7 @@ This file creates graph embedding from graph, trasformed into format readable by
 import torch
 from torch_geometric.nn import Node2Vec
 import warnings
+import time
 #import torch.multiprocessing as mp
 
 def main():
@@ -49,4 +50,7 @@ def main():
 
 
 if __name__ == "__main__":
+    start = time.perf_counter_ns()
     main()
+    end = time.perf_counter_ns()
+    print(f"{end-start}ns")

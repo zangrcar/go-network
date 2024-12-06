@@ -183,7 +183,7 @@ func Extract(file_name string) string {
 		allAttributes[triple.Subject]["neighbors"] = append(allAttributes[triple.Subject]["neighbors"].([]string), triple.Object)
 	}
 
-	newfile_name := "citatioen_network_tiny_extracted_data.json"
+	newfile_name := "citation_network_tiny_extracted_data.json"
 
 	newfile, err := os.Create(newfile_name)
 	if err != nil {
