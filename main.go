@@ -269,11 +269,11 @@ func Extract(file_name string) string {
 
 func main() {
 	start := time.Now()
-	extracted_file_name := "citation_network_tiny_extracted_data_test.json"
+	extracted_file_name := "citation_network_extracted_data.json"
 	g := Create_graph(extracted_file_name)
 	fmt.Println(len(g.Edges), len(g.Nodes))
 
-	g.CombineLeaves()
+	g.RemoveLeaves()
 
 	fmt.Println(len(g.Edges), len(g.Nodes))
 
@@ -296,3 +296,8 @@ func main() {
 //graph creatin & dilution tiny: 500-550ms
 //graph to pyg format tiny: ~6500000ns
 //shallow embedding of graph tiny: ~15000000ns
+
+//graph creation: 5min30s - 6min
+//graph creatin & dilution tiny: ~45min
+//graph to pyg format tiny: 45-50s
+//shallow embedding of graph tiny: ~0,1s

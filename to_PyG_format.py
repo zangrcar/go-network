@@ -31,8 +31,16 @@ node_features = torch.tensor(node_features, dtype=torch.float)
 edge_index = []
 edge_attr = []  # Store edge attributes (e.g., weights)
 for edge in edges.values():
-    from_idx = node_id_map[edge['First_node']['ID']]
-    to_idx = node_id_map[edge['Second_node']['ID']]
+    if edge['First_node']['ID'] in node_id_map:
+        from_idx = node_id_map[edge['First_node']['ID']]
+    else:
+        print(f"Key not found: {edge['Second_node']['ID']}")
+        continue
+    if edge['Second_node']['ID'] in node_id_map:
+        to_idx = node_id_map[edge['Second_node']['ID']]
+    else:
+        print(f"Key not found: {edge['Second_node']['ID']}")
+        continue
     
     # Since this is an undirected graph, add both directions
     edge_index.append([from_idx, to_idx])
@@ -52,7 +60,7 @@ data = Data(x=node_features, edge_index=edge_index, edge_attr=edge_attr)
 # Print the created Data object
 print(data)
 
-torch.save(data, 'citation_data_tiny_full.pt')
+torch.save(data, 'citation_data_full.pt')
 #citation_data_tiny_with_combined_leaves_full
 
 end = time.perf_counter_ns()
