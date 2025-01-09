@@ -17,6 +17,24 @@ with open('graph_data.json') as f:
 nodes = graph_data['Nodes']
 edges = graph_data['Edges']
 
+print(len(nodes))
+
+keywords_to_num = {}
+num_to_keywords = []
+node_to_keywords = {}
+count = 0
+
+for key in nodes:
+    for word in nodes[key]["Attributes"]["keywords"]:
+        if word not in keywords_to_num:
+            keywords_to_num[word] = count
+            count+=1
+            num_to_keywords.append(word)
+        if key not in node_to_keywords:
+            node_to_keywords[key] = []
+        node_to_keywords[key].append(keywords_to_num[word])
+
+
 # Convert nodes' features into a tensor (assuming features are numeric)
 node_features = []
 node_id_map = {}  # Map node IDs to indices
@@ -60,8 +78,10 @@ data = Data(x=node_features, edge_index=edge_index, edge_attr=edge_attr)
 # Print the created Data object
 print(data)
 
-torch.save(data, 'citation_data_full.pt')
+torch.save(data, 'citation_data_tiny_with_combined_leaves.pt')
 #citation_data_tiny_with_combined_leaves_full
+
+torch.save({'dict': node_to_keywords, 'array': num_to_keywords}, 'citation_data_tiny_with_combined_leaves_dic_arr.pt')
 
 end = time.perf_counter_ns()
 print(f"{end-start}ns")

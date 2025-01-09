@@ -269,13 +269,39 @@ func Extract(file_name string) string {
 
 func main() {
 	start := time.Now()
-	extracted_file_name := "citation_network_extracted_data.json"
+	extracted_file_name := "citation_network_tiny_extracted_data.json"
 	g := Create_graph(extracted_file_name)
 	fmt.Println(len(g.Edges), len(g.Nodes))
 
-	g.RemoveLeaves()
+	/*keywords := make(map[string]int)
+	reverse_keywords := []string{}
+	node_to_keywords := make(map[string][]int)
+	counter := 0*/
+
+	g.CombineLeaves()
 
 	fmt.Println(len(g.Edges), len(g.Nodes))
+
+	/*for _, node := range g.Nodes {
+		if w, ok := node.Attributes["keywords"].([]string); ok {
+			// Iterate over the slice
+			for _, key := range w {
+				if _, exists := keywords[key]; !exists {
+					keywords[key] = counter
+					counter++
+					reverse_keywords = append(reverse_keywords, key)
+				}
+				node_to_keywords[node.ID] = append(node_to_keywords[node.ID], keywords[key])
+			}
+		} else {
+			fmt.Println("keywords is not a slice of strings")
+			fmt.Println(reflect.TypeOf(node.Attributes["keywords"]))
+		}
+	}
+
+	for i := range reverse_keywords {
+		fmt.Println(reverse_keywords[i], i, keywords[reverse_keywords[i]])
+	}*/
 
 	g.WriteToFile("graph_data.json")
 

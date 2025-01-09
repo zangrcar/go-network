@@ -32,7 +32,11 @@ def main():
     # Suppress specific warning
     warnings.filterwarnings("ignore", category=FutureWarning)
 
-    data = torch.load('citation_data_tiny_full.pt')
+    data = torch.load('citation_data_tiny_with_combined_leaves.pt')
+    dic_arr_data = torch.load('citation_data_tiny_with_combined_leaves_dic_arr.pt')
+    dict_data = dic_arr_data["dict"]
+    arr_data = dic_arr_data['array']
+
     #mp.set_start_method('spawn', force=True)
     model = Node2Vec(
         data.edge_index,
@@ -61,6 +65,7 @@ def main():
     
     embeddings = model(torch.arange(model.num_nodes, device=device))
     print(embeddings)
+    print(embeddings.shape)
 
     #
 
@@ -122,3 +127,13 @@ if __name__ == "__main__":
     main()
     end = time.perf_counter_ns()
     print(f"{end-start}ns")
+
+
+# najdi dodatem embedding model, ki bi upošteval tudi vsebino noda
+# če ni tega samo dodaj nakoncu node-embeddinga prilimaj še text-embedding
+# kot pri nodetovec se sprehaja po grafu, ampak ne gleda id nodov ampak primerja text embeddinge
+# glede na text embedding streniramo model da predicta možne key worde
+# kot klasifikacijo damo vse možne key-words
+# damo posebi node za embedding da vemo ker je ker
+# dodamo stolpce z vsemi moznimi key-wordi, in dodamo 1, če je notri in 0 če ni v temu nodu
+# gxboost
